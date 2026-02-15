@@ -1,0 +1,81 @@
+blueprint:
+  name: Interrupteur Aqara MQTT - Simple Bouton
+  description: >
+    Gestion d'un interrupteur Aqara à un seul bouton via MQTT (Zigbee2MQTT).
+    Gère : Clic Simple, Double Clic et Appui Long (Hold).
+  domain: automation
+  input:
+    switch_device:
+      name: Interrupteur Aqara (Simple)
+      description: Sélectionne ton interrupteur simple.
+      selector:
+        device:
+          integration: mqtt
+          
+    action_single:
+      name: Clic Simple
+      description: Action au clic simple.
+      default: []
+      selector:
+        action: {}
+
+    action_double:
+      name: Double Clic
+      description: Action au double clic.
+      default: []
+      selector:
+        action: {}
+
+    action_hold:
+      name: Appui Long (Hold)
+      description: Action au maintien du bouton.
+      default: []
+      selector:
+        action: {}
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - domain: mqtt
+    device_id: !input switch_device
+    type: action
+    subtype: single
+    trigger: device
+    id: single
+    
+  - domain: mqtt
+    device_id: !input switch_device
+    type: action
+    subtype: double
+    trigger: device
+    id: double
+
+  - domain: mqtt
+    device_id: !input switch_device
+    type: action
+    subtype: hold
+    trigger: device
+    id: hold
+
+condition: []
+
+action:
+  - choose:
+      # Clic Simple
+      - conditions:
+          - condition: trigger
+            id: single
+        sequence: !input action_single
+        
+      # Double Clic
+      - conditions:
+          - condition: trigger
+            id: double
+        sequence: !input action_double
+
+      # Appui Long
+      - conditions:
+          - condition: trigger
+            id: hold
+        sequence: !input action_hold

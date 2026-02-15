@@ -1,0 +1,122 @@
+blueprint:
+  name: Interrupteur Aqara MQTT - Double Bouton
+  description: >
+    Gestion d'un interrupteur double Aqara via MQTT.
+    Gère : Clic Simple, Double Clic et Appui Simultané (Both).
+  domain: automation
+  input:
+    switch_device:
+      name: Interrupteur Aqara
+      description: Sélectionne ton interrupteur Aqara (via MQTT).
+      selector:
+        device:
+          integration: mqtt
+          # J'ai retiré le filtre fabricant pour être sûr qu'il détecte ton Aqara
+          
+    action_single_left:
+      name: Clic Simple - Gauche
+      description: Action pour le bouton gauche.
+      default: []
+      selector:
+        action: {}
+
+    action_double_left:
+      name: Double Clic - Gauche
+      description: Action pour le double clic gauche.
+      default: []
+      selector:
+        action: {}
+
+    action_single_right:
+      name: Clic Simple - Droite
+      description: Action pour le bouton droit.
+      default: []
+      selector:
+        action: {}
+
+    action_double_right:
+      name: Double Clic - Droite
+      description: Action pour le double clic droit.
+      default: []
+      selector:
+        action: {}
+
+    action_both:
+      name: Les Deux Boutons (Both)
+      description: Action quand on appuie sur les deux en même temps.
+      default: []
+      selector:
+        action: {}
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  # --- GAUCHE ---
+  - domain: mqtt
+    device_id: !input switch_device
+    type: action
+    subtype: single_left
+    trigger: device
+    id: single_left
+    
+  - domain: mqtt
+    device_id: !input switch_device
+    type: action
+    subtype: double_left
+    trigger: device
+    id: double_left
+
+  # --- DROITE ---
+  - domain: mqtt
+    device_id: !input switch_device
+    type: action
+    subtype: single_right
+    trigger: device
+    id: single_right
+
+  - domain: mqtt
+    device_id: !input switch_device
+    type: action
+    subtype: double_right
+    trigger: device
+    id: double_right
+
+  # --- LES DEUX (BOTH) ---
+  # Sur Aqara, c'est souvent 'both' ou 'both_single' selon le modèle
+  - domain: mqtt
+    device_id: !input switch_device
+    type: action
+    subtype: both
+    trigger: device
+    id: both
+
+condition: []
+
+action:
+  - choose:
+      # Actions Gauche
+      - conditions:
+          - condition: trigger
+            id: single_left
+        sequence: !input action_single_left
+      - conditions:
+          - condition: trigger
+            id: double_left
+        sequence: !input action_double_left
+
+      # Actions Droite
+      - conditions:
+          - condition: trigger
+            id: single_right
+        sequence: !input action_single_right
+      - conditions:
+          - condition: trigger
+            id: double_right
+        sequence: !input action_double_right
+
+      # Action Both
+      - conditions:
+          - condition: trigger
+            id: both
+        sequence: !input action_both
